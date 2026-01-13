@@ -11,7 +11,6 @@ st.set_page_config(
 # ------------------- LOAD MODEL -------------------
 model = joblib.load("xgb_diet_model.pkl")
 label_encoder = joblib.load("diet_label_encoder.pkl")
-model_columns = joblib.load("diet_model_columns.pkl")
 
 # ------------------- CSS -------------------
 st.markdown("""
@@ -23,7 +22,6 @@ st.markdown("""
     background-attachment: fixed;
 }
 
-/* Card wrapper */
 [data-testid="stVerticalBlock"] > [data-testid="stVerticalBlock"] {
     background: rgba(255,255,255,0.95);
     padding: 3rem;
@@ -33,7 +31,6 @@ st.markdown("""
     margin: 3rem auto;
 }
 
-/* Title */
 .app-title {
     text-align: center;
     font-size: 2.8rem;
@@ -42,7 +39,6 @@ st.markdown("""
     margin-bottom: 0.3rem;
 }
 
-/* Subtitle */
 .app-subtitle {
     text-align: center;
     font-size: 1.05rem;
@@ -50,7 +46,6 @@ st.markdown("""
     margin-bottom: 2.2rem;
 }
 
-/* Footer */
 .app-footer {
     text-align: center;
     margin-top: 2.5rem;
@@ -59,6 +54,7 @@ st.markdown("""
     font-size: 0.95rem;
     color: #555;
 }
+
 .app-footer strong {
     color: #1f7a4d;
 }
@@ -142,8 +138,8 @@ with st.container():
         f"**BMI:** {bmi} | **BMR:** {bmr} | **TDEE:** {tdee} | **Calorie Balance:** {calorie_balance}"
     )
 
-    # ------------------- MODEL INPUT -------------------
-    numeric = {
+    # ------------------- MODEL INPUT (RAW – NO ENCODING) -------------------
+    input_df = pd.DataFrame([{
         "Age": age,
         "Height_cm": height,
         "Weight_kg": weight,
@@ -156,24 +152,15 @@ with st.container():
         "Blood_Pressure_mmHg": blood_pressure,
         "Glucose_mg/dL": glucose,
         "Weekly_Exercise_Hours": weekly_exercise_hours,
-    }
-
-    categorical = {
-        f"Gender_{gender}": 1,
-        f"Physical_Activity_Level_{physical_activity}": 1,
-        f"Disease_Type_{disease_type}": 1,
-        f"Severity_{severity}": 1,
-        f"Dietary_Restrictions_{dietary_restriction}": 1,
-        f"Preferred_Cuisine_{preferred_cuisine}": 1,
-        f"Allergies_{allergy}": 1,
-        f"Adherence_to_Diet_Plan_{adherence}": 1,
-    }
-
-    final_input = dict.fromkeys(model_columns, 0)
-    final_input.update(numeric)
-    final_input.update(categorical)
-
-    input_df = pd.DataFrame([final_input])[model_columns]
+        "Gender": gender,
+        "Physical_Activity_Level": physical_activity,
+        "Disease_Type": disease_type,
+        "Severity": severity,
+        "Dietary_Restrictions": dietary_restriction,
+        "Preferred_Cuisine": preferred_cuisine,
+        "Allergies": allergy,
+        "Adherence_to_Diet_Plan": adherence
+    }])
 
     # ------------------- PREDICTION -------------------
     if st.button("Get Diet Recommendation"):
