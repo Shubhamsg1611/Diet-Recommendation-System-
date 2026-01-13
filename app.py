@@ -8,9 +8,10 @@ st.set_page_config(
     layout="wide"
 )
 
-# ------------------- LOAD MODEL -------------------
+# ------------------- LOAD MODEL & SCHEMA -------------------
 model = joblib.load("xgb_diet_model.pkl")
 label_encoder = joblib.load("diet_label_encoder.pkl")
+model_columns = joblib.load("diet_model_columns.pkl")
 
 # ------------------- CSS -------------------
 st.markdown("""
@@ -61,7 +62,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ------------------- CARD CONTAINER -------------------
+# ------------------- UI CONTAINER -------------------
 with st.container():
 
     st.markdown("<div class='app-title'>Personalized Diet Recommendation System</div>", unsafe_allow_html=True)
@@ -94,7 +95,6 @@ with st.container():
         blood_pressure = st.number_input("Blood Pressure (mmHg)", 80, 200, 120)
         glucose = st.number_input("Glucose (mg/dL)", 70, 300, 100)
 
-    # ------------------- DIETARY PREFERENCES -------------------
     st.subheader("Dietary Preferences")
 
     col3, col4 = st.columns(2)
@@ -138,8 +138,8 @@ with st.container():
         f"**BMI:** {bmi} | **BMR:** {bmr} | **TDEE:** {tdee} | **Calorie Balance:** {calorie_balance}"
     )
 
-    # ------------------- MODEL INPUT (RAW – NO ENCODING) -------------------
-    input_df = pd.DataFrame([{
+    # ------------------- MODEL INPUT (SCHEMA SAFE) -------------------
+    user_input = {
         "Age": age,
         "Height_cm": height,
         "Weight_kg": weight,
@@ -160,7 +160,29 @@ with st.container():
         "Preferred_Cuisine": preferred_cuisine,
         "Allergies": allergy,
         "Adherence_to_Diet_Plan": adherence
-    }])
+    }
+
+    input_df = pd.DataFrame(columns=model_columns)
+    input_df.loc[0] = 0
+
+    for col, val in user_input.items():
+        if col in input_df.columns:
+            input_df.at[0, col] = val
+
+    numeric_cols = [
+        "Age","Height_cm","Weight_kg","BMI","BMR","TDEE",
+        "Calorie_Balance","Daily_Caloric_Intake",
+        "Cholesterol_mg/dL","Blood_Pressure_mmHg",
+        "Glucose_mg/dL","Weekly_Exercise_Hours"
+    ]
+
+    for col in numeric_cols:
+        if col in input_df.columns:
+            input_df[col] = pd.to_numeric(input_df[col], errors="coerce").fillna(0)
+
+    for col in input_df.columns:
+        if col not in numeric_cols:
+            input_df[col] = input_df[col].astype(str)
 
     # ------------------- PREDICTION -------------------
     if st.button("Get Diet Recommendation"):
