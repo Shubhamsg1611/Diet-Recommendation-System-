@@ -194,6 +194,7 @@ with st.container():
     st.markdown("""
     <div class="app-footer">
         Developed by <strong>Shubham Ghanwat</strong><br>
-        Data Science & Machine Learning Practitioner
+        Data Science & Machine Learning Engineer
     </div>
     """, unsafe_allow_html=True)
+
